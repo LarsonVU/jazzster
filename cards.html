@@ -398,7 +398,7 @@ td input.bad{border-color:var(--bad);background:#fff6f5}
   function frontCard(id, pv, n) {
     let g = ''; for (let r = 12; r <= 50; r += 4.5) g += '<circle cx="50" cy="50" r="' + r + '"/>';
     return '<div class="card front"><svg class="grooves" viewBox="0 0 100 100" fill="none" stroke="#1f2a26" stroke-width=".5">' + g + '</svg>' +
-      '<div class="qr">' + qrSvg(playerUrl(id, pv)) + '</div><div class="lbl">' + esc(state.label) + '</div><div class="num">' + n + '</div></div>';
+      '<div class="qr">' + qrSvg(playerUrl(id, pv)) + '</div><div class="lbl">' + esc(state.label) + '</div></div>';
   }
   function backCard(r, n) {
     const y = String(r[3]).trim(), dec = Math.floor((+y || 2020) / 10) * 10, col = DECADE[dec] || '#dddddd';
@@ -406,7 +406,7 @@ td input.bad{border-color:var(--bad);background:#fff6f5}
     const s = +state.size / 65;
     const af = fit(r[1], 10.5, 22, 8) * s, tf = fit(r[2], 11, 20, 8.5) * s;
     return '<div class="card back" style="background:' + col + ';color:' + ink + ';--dc:' + col + ';--af:' + af.toFixed(1) + 'pt;--tf:' + tf.toFixed(1) + 'pt;--yf:' + (32 * s).toFixed(1) + 'pt">' +
-      '<div class="artist">' + esc(r[1]) + '</div><div class="year">' + esc(y) + '</div><div class="title">' + esc(r[2]) + '</div><div class="num">' + n + '</div></div>';
+      '<div class="artist">' + esc(r[1]) + '</div><div class="year">' + esc(y) + '</div><div class="title">' + esc(r[2]) + '</div></div>';
   }
   function renderPreview() {
     const ready = state.songs.map((r, i) => ({ r, id: trackId(r[0]), pv: previewId(r[4]), n: i + 1 })).filter(x => x.id);
