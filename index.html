@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Jazzster</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Inter:wght@400;600&display=swap">
+<style>
+:root{--bg:#121a17;--ink:#f4efe6;--dim:#a9b3ad;--accent:#f2b84b;--ring:#2b3833}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:radial-gradient(120% 80% at 50% 0%,#1d2a25 0%,var(--bg) 60%);color:var(--ink);font:16px/1.5 Inter,system-ui,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 18px 32px;text-align:center;-webkit-tap-highlight-color:transparent}
+h1{font:800 34px/1 Fraunces,Georgia,serif;letter-spacing:.5px;margin:0 0 6px}
+.sub{color:var(--dim);margin:0 0 28px;font-size:15px}
+.disc{position:relative;width:min(72vw,280px);aspect-ratio:1;margin:0 auto 22px}
+.disc svg{position:absolute;inset:0;width:100%;height:100%}
+.grooves{animation:spin 6s linear infinite;animation-play-state:paused;transform-origin:50% 50%}
+.playing .grooves{animation-play-state:running}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.grooves{animation:none}}
+#play{position:absolute;inset:27%;border-radius:50%;border:0;background:var(--accent);color:#1a1408;cursor:pointer;display:grid;place-items:center;box-shadow:0 10px 30px rgba(0,0,0,.45);transition:transform .12s}
+#play:active{transform:scale(.95)}
+#play:focus-visible{outline:3px solid var(--ink);outline-offset:4px}
+#play svg{width:42%;height:42%;position:static}
+#play[disabled]{opacity:.55;cursor:wait}
+.status{min-height:24px;color:var(--dim);font-size:15px;margin:0 0 6px}
+.time{font-variant-numeric:tabular-nums;color:var(--ink);font-weight:600}
+.actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:18px}
+.btn{font:600 15px Inter,system-ui,sans-serif;color:var(--ink);background:transparent;border:1.5px solid var(--ring);border-radius:999px;padding:11px 18px;min-height:44px;cursor:pointer}
+.btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+#fallback{display:none;margin-top:20px;max-width:420px;width:100%}
+#fallback.show{display:block}
+#fallback p{color:var(--dim);font-size:14px;margin:0 0 10px}
+/* The Spotify player sits here. Normally invisible; in fallback mode it is shown
+   heavily blurred so the title can't be read but the round play button can still be tapped. */
+#embedWrap{position:fixed;left:0;bottom:0;width:320px;height:152px;opacity:0;pointer-events:none;overflow:hidden;border-radius:12px}
+#fallback.show #embedWrap{position:relative;opacity:1;pointer-events:auto;width:100%;margin:0 auto}
+#fallback.show #embedWrap iframe{filter:blur(9px) saturate(.6)}
+.empty h2{font:600 22px Fraunces,Georgia,serif;margin:0 0 8px}
+.empty p{color:var(--dim);max-width:340px;margin:0 auto}
+footer{position:fixed;bottom:10px;left:0;right:0;font-size:12px;color:#5f6b66}
+</style>
+</head>
+<body>
+<h1>Jazzster</h1>
+
+<div id="game" hidden>
+  <p class="sub">Listen, then put the card in your timeline.</p>
+  <div class="disc" id="disc">
+    <svg viewBox="0 0 200 200" aria-hidden="true">
+      <circle cx="100" cy="100" r="98" fill="#0a0d0c"/>
+      <g class="grooves" fill="none" stroke="#1f2724" stroke-width="1">
+        <circle cx="100" cy="100" r="92"/><circle cx="100" cy="100" r="86"/><circle cx="100" cy="100" r="80"/>
+        <circle cx="100" cy="100" r="74"/><circle cx="100" cy="100" r="68"/><circle cx="100" cy="100" r="62"/>
+        <path d="M40 60 A70 70 0 0 1 70 34" stroke="#3a4743" stroke-width="3" stroke-linecap="round"/>
+      </g>
+      <circle id="prog" cx="100" cy="100" r="96" fill="none" stroke="var(--accent)" stroke-width="3"
+        stroke-dasharray="603" stroke-dashoffset="603" transform="rotate(-90 100 100)" stroke-linecap="round"/>
+    </svg>
+    <button id="play" aria-label="Play" disabled>
+      <svg id="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+    </button>
+  </div>
+  <p class="status" id="status">Loading the song…</p>
+  <p class="status"><span class="time" id="time"></span></p>
+  <div class="actions">
+    <button class="btn" id="restart" type="button">Start over</button>
+    <button class="btn" id="noSound" type="button">No sound?</button>
+  </div>
+  <div id="fallback">
+    <p>Tap the round button inside the blurred player below. Avoid tapping the text area, because that opens Spotify and shows the title.</p>
+    <div id="embedWrap"><div id="embed"></div></div>
+  </div>
+</div>
+
+<div id="empty" class="empty" hidden>
+  <h2>Scan a card to start</h2>
+  <p>Point your phone camera at the QR code on a Jazzster card. The song plays here without showing its title.</p>
+</div>
+
+<footer>Music plays through Spotify.</footer>
+
+<script>
+{
+  const $ = id => document.getElementById(id);
+  const trackFromHash = () => {
+    const h = decodeURIComponent(location.hash.slice(1)).trim();
+    const m = h.match(/([A-Za-z0-9]{22})/);
+    return m ? m[1] : null;
+  };
+  const fmt = ms => { const s = Math.max(0, Math.round(ms / 1000)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+
+  let controller = null, playing = false, started = false, lastPos = 0, lastDur = 0;
+  const PLAY = '<path d="M8 5v14l11-7z"/>', PAUSE = '<path d="M7 5h4v14H7zM13 5h4v14h-4z"/>';
+
+  function setPlaying(p) {
+    playing = p;
+    $('icon').innerHTML = p ? PAUSE : PLAY;
+    $('play').setAttribute('aria-label', p ? 'Pause' : 'Play');
+    $('disc').classList.toggle('playing', p);
+  }
+
+  function showGame(id) {
+    $('game').hidden = false; $('empty').hidden = true;
+    setPlaying(false); started = false;
+    $('status').textContent = 'Loading the song…';
+    $('time').textContent = '';
+    $('prog').style.strokeDashoffset = 603;
+    if (controller) { controller.loadUri('spotify:track:' + id); }
+  }
+
+  const id0 = trackFromHash();
+  if (!id0) { $('empty').hidden = false; }
+  else {
+    showGame(id0);
+    // If Spotify's player hasn't reported ready after a while, offer the blurred player directly.
+    setTimeout(() => { if ($('play').disabled) { $('fallback').classList.add('show'); $('status').textContent = 'Still loading. You can also use the player below.'; } }, 8000);
+  }
+
+  window.onSpotifyIframeApiReady = (IFrameAPI) => {
+    const id = trackFromHash();
+    if (!id) return;
+    IFrameAPI.createController($('embed'), { uri: 'spotify:track:' + id, width: '100%', height: 152 }, (c) => {
+      controller = c;
+      c.addListener('ready', () => {
+        $('play').disabled = false;
+        $('status').textContent = 'Tap the button to play.';
+      });
+      c.addListener('playback_update', (e) => {
+        const d = e.data || {};
+        lastPos = d.position || 0; lastDur = d.duration || 0;
+        const isPlaying = !d.isPaused && !d.isBuffering;
+        if (isPlaying) started = true;
+        setPlaying(!d.isPaused);
+        if (lastDur) {
+          $('prog').style.strokeDashoffset = 603 * (1 - Math.min(1, lastPos / lastDur));
+          $('time').textContent = fmt(lastPos) + ' / ' + fmt(lastDur);
+        }
+        if (d.isBuffering) $('status').textContent = 'Loading…';
+        else if (isPlaying) $('status').textContent = lastDur && lastDur <= 31000 ? 'Playing a 30-second preview.' : 'Playing. Who is it, and when?';
+        else if (started) $('status').textContent = 'Paused.';
+      });
+    });
+  };
+
+  $('play').addEventListener('click', () => {
+    if (!controller) return;
+    controller.togglePlay();
+    // If nothing starts within a few seconds, the browser probably blocked playback from outside the player.
+    if (!playing) setTimeout(() => { if (!started) { $('fallback').classList.add('show'); $('status').textContent = 'Your browser blocked the button. Use the player below.'; } }, 3500);
+  });
+  $('restart').addEventListener('click', () => { if (controller) { controller.seek(0); controller.resume(); } });
+  $('noSound').addEventListener('click', () => $('fallback').classList.toggle('show'));
+  window.addEventListener('hashchange', () => { const id = trackFromHash(); if (id) { if (!controller) location.reload(); else showGame(id); } });
+}
+</script>
+<script src="https://open.spotify.com/embed/iframe-api/v1" async></script>
+</body>
+</html>

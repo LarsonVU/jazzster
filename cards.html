@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Jazzster card maker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,800;1,9..144,500&family=Inter:wght@400;600;700&display=swap">
+<style>
+:root{--bg:#f6f3ee;--ink:#17201c;--dim:#5d6863;--line:#d9d3c8;--accent:#c7841d;--panel:#fff;--bad:#b3261e}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Inter,system-ui,sans-serif}
+.wrap{max-width:1100px;margin:0 auto;padding:28px max(4vw,16px) 60px}
+h1{font:800 40px/1.05 Fraunces,Georgia,serif;margin:0 0 6px}
+h2{font:600 22px/1.2 Fraunces,Georgia,serif;margin:34px 0 10px}
+.lead{color:var(--dim);max-width:68ch;margin:0 0 8px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px}
+.settings{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+label{display:block;font-size:13px;font-weight:600;color:var(--dim);margin-bottom:4px}
+input,select,textarea{font:16px Inter,system-ui,sans-serif;width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink)}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:0;border-color:transparent}
+textarea{min-height:110px;font-size:14px;font-family:ui-monospace,Menlo,monospace}
+.hint{font-size:13px;color:var(--dim);margin:4px 0 0}
+.btn{font:600 15px Inter,system-ui,sans-serif;border-radius:999px;padding:10px 18px;min-height:44px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.btn.primary{background:var(--ink);color:#fff}
+.btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px}
+table{width:100%;border-collapse:collapse}
+th{font-size:13px;text-align:left;color:var(--dim);font-weight:600;padding:6px 6px;border-bottom:1px solid var(--line)}
+td{padding:5px 4px;border-bottom:1px solid #eee8de;vertical-align:middle}
+td.n{width:34px;color:var(--dim);font-variant-numeric:tabular-nums;text-align:right;padding-right:8px}
+td.y input{width:84px}
+td.act{white-space:nowrap;width:1%}
+td input.bad{border-color:var(--bad);background:#fff6f5}
+.icon{border:0;background:none;cursor:pointer;color:var(--dim);font-size:14px;padding:8px;min-width:36px;min-height:36px;border-radius:6px;text-decoration:none;display:inline-block}
+.icon:hover{background:#efe9df;color:var(--ink)}
+.msg{font-size:14px;margin:10px 0 0;color:var(--dim)}
+.msg.bad{color:var(--bad)}
+.steps{margin:0;padding-left:20px;color:var(--dim);max-width:72ch}
+.steps li{margin:4px 0}
+.preview{overflow-x:auto;padding:10px 0}
+.preview .sheet{zoom:.42;margin:0 0 24px;box-shadow:0 2px 14px rgba(0,0,0,.15)}
+.sheetlabel{font-size:13px;color:var(--dim);margin:0 0 6px}
+@media(max-width:700px){
+  .songs thead{display:none}
+  .songs tr{display:grid;grid-template-columns:1fr 1fr 90px;gap:6px;padding:10px 0;border-bottom:1px solid var(--line)}
+  .songs td{border:0;padding:0}
+  .songs td.n{display:none}
+  .songs td.link{grid-column:1/-1}
+  .songs td.act{grid-column:1/-1}
+  .preview .sheet{zoom:.36}
+}
+
+/* ---------- printed sheets ---------- */
+.sheet{width:210mm;height:297mm;background:#fff;position:relative;display:flex;align-items:center;justify-content:center;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.grid{display:grid;grid-template-columns:repeat(3,var(--card));grid-template-rows:repeat(4,var(--card));position:relative}
+.card{width:var(--card);height:var(--card);position:relative;overflow:hidden;outline:.15mm solid rgba(0,0,0,.18);outline-offset:-.075mm}
+.card.blank{outline:none}
+.mark{position:absolute;background:#000}
+/* front */
+.front{background:#121a17;display:flex;align-items:center;justify-content:center}
+.front .grooves{position:absolute;inset:0;width:100%;height:100%}
+.front .qr{position:relative;background:#fff;border-radius:3mm;padding:2.2mm;width:58%;aspect-ratio:1}
+.front .qr svg{display:block;width:100%;height:100%}
+.front .lbl{position:absolute;bottom:3.2mm;left:0;right:0;text-align:center;font:800 9pt/1 Fraunces,Georgia,serif;letter-spacing:.6mm;color:#f2b84b}
+.front .num{position:absolute;top:2.6mm;right:3.2mm;font:600 6pt Inter,sans-serif;color:#6d7a74}
+/* back */
+.back{display:flex;flex-direction:column;align-items:center;justify-content:space-between;text-align:center;padding:5mm 4.5mm 4.6mm}
+.back .artist{font:700 var(--af,10pt)/1.15 Inter,sans-serif;text-wrap:balance}
+.back .year{font:800 var(--yf,30pt)/1 Fraunces,Georgia,serif;letter-spacing:-.3mm}
+.back .title{font:italic 500 var(--tf,10.5pt)/1.15 Fraunces,Georgia,serif;text-wrap:balance}
+.back .num{position:absolute;top:2.6mm;right:3.2mm;font:600 6pt Inter,sans-serif;opacity:.55}
+/* ink saver */
+.inksaver .front{background:#fff}
+.inksaver .front .grooves{display:none}
+.inksaver .front .qr{width:66%;padding:0}
+.inksaver .front .lbl{color:#17201c}
+.inksaver .back{background:#fff !important;color:#17201c !important;box-shadow:inset 0 0 0 2.2mm var(--dc)}
+
+@media print{
+  @page{size:A4 portrait;margin:0}
+  body{background:#fff}
+  .noprint{display:none !important}
+  .wrap{padding:0;max-width:none}
+  .preview{padding:0;overflow:visible}
+  .preview .sheet{zoom:1;margin:0;box-shadow:none;break-after:page;page-break-after:always}
+  .sheetlabel{display:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="noprint">
+    <h1>Jazzster card maker</h1>
+    <p class="lead">Each card has a QR code on the front and the artist, title and recording year on the back. Scanning the code opens the Jazzster player, which plays the song without showing its title.</p>
+
+    <h2>1. Settings</h2>
+    <div class="panel settings">
+      <div>
+        <label for="base">Player address</label>
+        <input id="base" autocomplete="off">
+        <p class="hint">Where your index.html is hosted. Filled in automatically.</p>
+      </div>
+      <div>
+        <label for="label">Text on the front</label>
+        <input id="label" maxlength="20">
+      </div>
+      <div>
+        <label for="size">Card size</label>
+        <select id="size"><option value="60">60 × 60 mm</option><option value="65">65 × 65 mm</option></select>
+      </div>
+      <div>
+        <label for="flip">Double-sided printing</label>
+        <select id="flip"><option value="long">Flip on long edge (most printers)</option><option value="short">Flip on short edge</option></select>
+      </div>
+      <div>
+        <label for="ink">Colours</label>
+        <select id="ink"><option value="color">Full colour</option><option value="saver">Ink saver (white cards)</option></select>
+      </div>
+    </div>
+
+    <h2>2. Songs</h2>
+    <div class="panel">
+      <table class="songs">
+        <thead><tr><th></th><th>Spotify link</th><th>Artist</th><th>Title</th><th>Year</th><th></th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+      <div class="row">
+        <button class="btn" id="add" type="button">Add a song</button>
+        <button class="btn" id="clear" type="button">Clear all</button>
+      </div>
+      <p class="msg" id="status"></p>
+    </div>
+
+    <h2>Fill in many links at once</h2>
+    <div class="panel">
+      <p class="hint" style="margin:0 0 8px">In the Spotify desktop app, open your playlist, click a song, press Ctrl+A (Cmd+A on Mac) and then Ctrl+C. Paste here. The links fill rows 1, 2, 3… in playlist order, and new rows are added if needed.</p>
+      <textarea id="links" placeholder="https://open.spotify.com/track/…"></textarea>
+      <div class="row"><button class="btn" id="fill" type="button">Fill in links</button></div>
+    </div>
+
+    <h2>Save or load the list as text</h2>
+    <div class="panel">
+      <p class="hint" style="margin:0 0 8px">One song per line: link, artist, title, year, separated by tabs. You can paste from a spreadsheet, and copy it back out to keep a backup. The list is also remembered in this browser.</p>
+      <textarea id="text"></textarea>
+      <div class="row">
+        <button class="btn" id="load" type="button">Load from text</button>
+        <button class="btn" id="copy" type="button">Copy list</button>
+      </div>
+    </div>
+
+    <h2>3. Print</h2>
+    <div class="panel">
+      <ol class="steps">
+        <li>Print double-sided on A4, at 100% scale (turn off "fit to page"). Thick paper, 200 gsm or more, works best.</li>
+        <li>Each front page is followed by its back page. Check one sheet first, because printers can shift the back by a millimetre or two.</li>
+        <li>Cut along the thin lines.</li>
+      </ol>
+      <div class="row"><button class="btn primary" id="print" type="button">Print cards</button></div>
+      <p class="msg" id="printMsg"></p>
+    </div>
+
+    <h2>Preview</h2>
+  </div>
+  <div class="preview" id="preview"></div>
+</div>
+
+<script src="qrcode.js"></script>
+<script>
+{
+  const $ = id => document.getElementById(id);
+  const KEY = 'jazzster-cards-v1';
+  const EXAMPLES = [
+    ['', 'Original Dixieland Jass Band', 'Livery Stable Blues', '1917'],
+    ['', 'Louis Armstrong and His Hot Five', 'West End Blues', '1928'],
+    ['', 'Coleman Hawkins', 'Body and Soul', '1939'],
+    ['', 'Duke Ellington', 'Take the "A" Train', '1941'],
+    ['', 'Charlie Parker', 'Ko-Ko', '1945'],
+    ['', 'Miles Davis', 'So What', '1959'],
+    ['', 'John Coltrane', 'Acknowledgement (A Love Supreme, Pt. I)', '1964'],
+    ['', 'Herbie Hancock', 'Chameleon', '1973'],
+    ['', 'Wynton Marsalis', 'Black Codes (From the Underground)', '1985'],
+    ['', 'Kamasi Washington', 'Change of the Guard', '2011']
+  ];
+  const DECADE = {1890:'#d8c7a6',1900:'#d8c7a6',1910:'#d8c7a6',1920:'#eeb26b',1930:'#e88a6a',1940:'#e0606e',1950:'#6fb3dc',1960:'#4aa39a',1970:'#a77be6',1980:'#f07cc0',1990:'#9ccf45',2000:'#5ccfee',2010:'#ffd257',2020:'#c3c3ff'};
+
+  const defaultBase = () => { const u = new URL('./', location.href); u.hash = ''; u.search = ''; return u.href; };
+  let state = { base: defaultBase(), label: 'JAZZSTER', size: '65', flip: 'long', ink: 'color', songs: EXAMPLES.map(r => r.slice()) };
+  try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && Array.isArray(s.songs)) state = Object.assign(state, s); } catch (e) {}
+  if (!state.base) state.base = defaultBase();
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} };
+
+  const trackId = s => { const m = String(s || '').match(/track[\/:]([A-Za-z0-9]{22})/) || String(s || '').trim().match(/^([A-Za-z0-9]{22})$/); return m ? m[1] : null; };
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const playerUrl = id => { let b = state.base.trim(); if (!b.endsWith('/') && !/\.html?$/.test(b)) b += '/'; return b + '#' + id; };
+
+  function qrSvg(text) {
+    const q = qrcode(0, 'M'); q.addData(text); q.make();
+    const n = q.getModuleCount(); let d = '';
+    for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (q.isDark(r, c)) d += 'M' + c + ' ' + r + 'h1v1h-1z';
+    return '<svg viewBox="-1 -1 ' + (n + 2) + ' ' + (n + 2) + '" shape-rendering="crispEdges"><path d="' + d + '" fill="#000"/></svg>';
+  }
+  const lum = hex => { const v = [1,3,5].map(i => parseInt(hex.substr(i, 2), 16) / 255).map(x => x <= .03928 ? x / 12.92 : ((x + .055) / 1.055) ** 2.4); return .2126 * v[0] + .7152 * v[1] + .0722 * v[2]; };
+  const fit = (s, base, step, min) => Math.max(min, base - Math.max(0, s.length - step) * 0.12);
+
+  // ---------- table ----------
+  function renderRows() {
+    $('rows').innerHTML = state.songs.map((r, i) => {
+      const id = trackId(r[0]);
+      return '<tr data-i="' + i + '">' +
+        '<td class="n">' + (i + 1) + '</td>' +
+        '<td class="link"><input data-k="0" value="' + esc(r[0]) + '" placeholder="Paste Spotify song link" aria-label="Spotify link, song ' + (i + 1) + '"' + (r[0] && !id ? ' class="bad"' : '') + '></td>' +
+        '<td><input data-k="1" value="' + esc(r[1]) + '" placeholder="Artist" aria-label="Artist"></td>' +
+        '<td><input data-k="2" value="' + esc(r[2]) + '" placeholder="Title" aria-label="Title"></td>' +
+        '<td class="y"><input data-k="3" value="' + esc(r[3]) + '" inputmode="numeric" maxlength="4" placeholder="Year" aria-label="Year"></td>' +
+        '<td class="act">' + (id ? '<a class="icon" target="_blank" rel="noopener" href="' + esc(playerUrl(id)) + '" title="Test in the player">▶ Test</a>' : '') +
+        '<button class="icon" data-del="' + i + '" type="button" title="Remove" aria-label="Remove song ' + (i + 1) + '">✕</button></td></tr>';
+    }).join('');
+    updateStatus();
+  }
+  function updateStatus() {
+    const total = state.songs.length;
+    const missing = state.songs.filter(r => !trackId(r[0])).length;
+    const noYear = state.songs.filter(r => !/^\d{4}$/.test(String(r[3]).trim())).length;
+    let t = total + ' song' + (total === 1 ? '' : 's') + '.';
+    if (missing) t += ' ' + missing + ' still need' + (missing === 1 ? 's' : '') + ' a Spotify link.';
+    if (noYear) t += ' ' + noYear + ' need' + (noYear === 1 ? 's' : '') + ' a four-digit year.';
+    $('status').textContent = t;
+    $('status').className = 'msg' + (missing || noYear ? ' bad' : '');
+    $('text').value = state.songs.map(r => r.map(x => String(x).replace(/[\t\n]/g, ' ')).join('\t')).join('\n');
+  }
+
+  $('rows').addEventListener('input', e => {
+    const tr = e.target.closest('tr'); if (!tr || e.target.dataset.k == null) return;
+    state.songs[+tr.dataset.i][+e.target.dataset.k] = e.target.value;
+    if (e.target.dataset.k === '0') e.target.classList.toggle('bad', !!e.target.value && !trackId(e.target.value));
+    save(); updateStatus(); schedulePreview();
+  });
+  $('rows').addEventListener('change', e => { if (e.target.dataset.k === '0') renderRows(); });
+  $('rows').addEventListener('click', e => {
+    const b = e.target.closest('[data-del]'); if (!b) return;
+    state.songs.splice(+b.dataset.del, 1); save(); renderRows(); renderPreview();
+  });
+  $('add').addEventListener('click', () => { state.songs.push(['', '', '', '']); save(); renderRows(); const ins = $('rows').querySelectorAll('tr:last-child input'); if (ins[0]) ins[0].focus(); });
+  let clearArmed = false;
+  $('clear').addEventListener('click', () => {
+    if (!clearArmed) { clearArmed = true; $('clear').textContent = 'Click again to clear'; setTimeout(() => { clearArmed = false; $('clear').textContent = 'Clear all'; }, 3000); return; }
+    state.songs = []; clearArmed = false; $('clear').textContent = 'Clear all'; save(); renderRows(); renderPreview();
+  });
+  $('fill').addEventListener('click', () => {
+    const ids = ($('links').value.match(/[A-Za-z0-9:\/._\-?=&]+/g) || []).map(trackId).filter(Boolean);
+    ids.forEach((id, i) => { if (!state.songs[i]) state.songs.push(['', '', '', '']); state.songs[i][0] = 'https://open.spotify.com/track/' + id; });
+    $('links').value = ''; save(); renderRows(); renderPreview();
+    $('status').textContent = ids.length + ' link' + (ids.length === 1 ? '' : 's') + ' filled in. ' + $('status').textContent;
+  });
+  $('load').addEventListener('click', () => {
+    const lines = $('text').value.split(/\r?\n/).filter(l => l.trim());
+    state.songs = lines.map(l => { const p = l.split(/\t|\s*;\s*/); while (p.length < 4) p.push(''); return p.slice(0, 4).map(s => s.trim()); });
+    save(); renderRows(); renderPreview();
+  });
+  $('copy').addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText($('text').value); $('copy').textContent = 'Copied'; }
+    catch (e) { $('text').select(); $('copy').textContent = 'Press Ctrl+C'; }
+    setTimeout(() => $('copy').textContent = 'Copy list', 2000);
+  });
+
+  // ---------- settings ----------
+  ['base', 'label', 'size', 'flip', 'ink'].forEach(k => {
+    $(k).value = state[k];
+    $(k).addEventListener('input', () => { state[k] = $(k).value; save(); if (k === 'base') renderRows(); schedulePreview(); });
+  });
+
+  // ---------- sheets ----------
+  const COLS = 3, ROWS = 4, PER = COLS * ROWS;
+  function cropMarks(card) {
+    // short tick marks outside the grid at every cut line
+    const W = COLS * card, H = ROWS * card, L = 5, G = 1.5, out = [];
+    for (let c = 0; c <= COLS; c++) { const x = c * card; out.push([x, -G - L, .2, L], [x, H + G, .2, L]); }
+    for (let r = 0; r <= ROWS; r++) { const y = r * card; out.push([-G - L, y, L, .2], [W + G, y, L, .2]); }
+    return out.map(([x, y, w, h]) => '<div class="mark" style="left:' + x + 'mm;top:' + y + 'mm;width:' + w + 'mm;height:' + h + 'mm"></div>').join('');
+  }
+  function frontCard(id, n) {
+    let g = ''; for (let r = 12; r <= 50; r += 4.5) g += '<circle cx="50" cy="50" r="' + r + '"/>';
+    return '<div class="card front"><svg class="grooves" viewBox="0 0 100 100" fill="none" stroke="#1f2a26" stroke-width=".5">' + g + '</svg>' +
+      '<div class="qr">' + qrSvg(playerUrl(id)) + '</div><div class="lbl">' + esc(state.label) + '</div><div class="num">' + n + '</div></div>';
+  }
+  function backCard(r, n) {
+    const y = String(r[3]).trim(), dec = Math.floor((+y || 2020) / 10) * 10, col = DECADE[dec] || '#dddddd';
+    const ink = lum(col) > .35 ? '#17201c' : '#ffffff';
+    const s = +state.size / 65;
+    const af = fit(r[1], 10.5, 22, 8) * s, tf = fit(r[2], 11, 20, 8.5) * s;
+    return '<div class="card back" style="background:' + col + ';color:' + ink + ';--dc:' + col + ';--af:' + af.toFixed(1) + 'pt;--tf:' + tf.toFixed(1) + 'pt;--yf:' + (32 * s).toFixed(1) + 'pt">' +
+      '<div class="artist">' + esc(r[1]) + '</div><div class="year">' + esc(y) + '</div><div class="title">' + esc(r[2]) + '</div><div class="num">' + n + '</div></div>';
+  }
+  function renderPreview() {
+    const ready = state.songs.map((r, i) => ({ r, id: trackId(r[0]), n: i + 1 })).filter(x => x.id);
+    const card = +state.size, out = [];
+    for (let p = 0; p * PER < ready.length; p++) {
+      const chunk = ready.slice(p * PER, p * PER + PER);
+      const fronts = [], backs = new Array(PER).fill('<div class="card blank"></div>');
+      for (let i = 0; i < PER; i++) {
+        const x = chunk[i]; const r = Math.floor(i / COLS), c = i % COLS;
+        fronts.push(x ? frontCard(x.id, x.n) : '<div class="card blank"></div>');
+        const br = state.flip === 'long' ? r : ROWS - 1 - r, bc = state.flip === 'long' ? COLS - 1 - c : c;
+        if (x) backs[br * COLS + bc] = backCard(x.r, x.n);
+      }
+      const sheet = cells => '<div class="sheet ' + (state.ink === 'saver' ? 'inksaver' : '') + '"><div class="grid" style="--card:' + card + 'mm">' + cells.join('') + cropMarks(card) + '</div></div>';
+      out.push('<p class="sheetlabel">Sheet ' + (p + 1) + ', front</p>' + sheet(fronts));
+      out.push('<p class="sheetlabel">Sheet ' + (p + 1) + ', back</p>' + sheet(backs));
+    }
+    $('preview').innerHTML = out.join('') || '<p class="msg">Add Spotify links to see the cards here.</p>';
+    const skipped = state.songs.length - ready.length;
+    $('printMsg').textContent = ready.length ? ready.length + ' card' + (ready.length === 1 ? '' : 's') + ' on ' + Math.ceil(ready.length / PER) + ' sheet' + (ready.length > PER ? 's' : '') + ' (' + Math.ceil(ready.length / PER) * 2 + ' printed pages).' + (skipped ? ' ' + skipped + ' song' + (skipped === 1 ? ' has' : 's have') + ' no link yet and will be left out.' : '') : 'No cards to print yet: add Spotify links first.';
+    $('printMsg').className = 'msg' + (skipped ? ' bad' : '');
+  }
+  let t = null; const schedulePreview = () => { clearTimeout(t); t = setTimeout(renderPreview, 250); };
+  $('print').addEventListener('click', () => { renderPreview(); window.print(); });
+
+  renderRows(); renderPreview();
+}
+</script>
+</body>
+</html>
