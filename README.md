@@ -20,6 +20,7 @@ Note: anyone who knows that address can open the site. It only plays songs and d
 1. Open `https://YOUR-NAME.github.io/jazzster/cards.html` on a computer.
 2. The 10 example songs are already filled in. Add a Spotify link for each one: in Spotify, right-click the song, choose **Share → Copy Song Link**, and paste it. Pick the version from the original album, not a "Best of".
    Quicker: put the songs in a Spotify playlist in the same order, select them all in the desktop app (Ctrl+A, then Ctrl+C) and paste them into "Fill in many links at once".
+   Or load everything from a spreadsheet: under **Load songs from Excel**, choose an .xlsx, .xls or .csv file with columns for link, artist, title, year and preview ID. Columns can be in any order, and Dutch or English column names both work.
 3. Click **▶ Test** on a row to check that the song plays.
 4. Click **Print cards**. Print double-sided on A4 at 100% scale, on thick paper (200 gsm or more), and cut along the lines.
 

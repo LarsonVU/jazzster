@@ -37,6 +37,11 @@ td input.bad{border-color:var(--bad);background:#fff6f5}
 .icon{border:0;background:none;cursor:pointer;color:var(--dim);font-size:14px;padding:8px;min-width:36px;min-height:36px;border-radius:6px;text-decoration:none;display:inline-block}
 .icon:hover{background:#efe9df;color:var(--ink)}
 .msg{font-size:14px;margin:10px 0 0;color:var(--dim)}
+.filebtn{display:inline-flex;align-items:center;margin:0;color:#fff;font-size:15px}
+.filebtn input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.filebtn:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+.drop.over{outline:2px dashed var(--accent);outline-offset:-6px;background:#fffaf0}
+.msg.ok{color:#2c6e49}
 .msg.bad{color:var(--bad)}
 .steps{margin:0;padding-left:20px;color:var(--dim);max-width:72ch}
 .steps li{margin:4px 0}
@@ -134,6 +139,17 @@ td input.bad{border-color:var(--bad);background:#fff6f5}
       </div>
       <p class="msg" id="status"></p>
       <p class="hint">The preview ID lets a phone play the 30-second preview with the title hidden. It can't be looked up from this page, so ask Claude to fill it in for your list. Cards without one still work through the full-song link.</p>
+    </div>
+
+    <h2>Load songs from Excel</h2>
+    <div class="panel drop" id="drop">
+      <p class="hint" style="margin:0 0 10px">Choose an Excel file (.xlsx or .xls) or a CSV file, or drag it onto this box. Put one song per row, with columns for the Spotify link, artist, title, year and (optionally) preview ID. Column names like <em>Link</em>, <em>Artist</em>/<em>Artiest</em>, <em>Title</em>/<em>Titel</em>, <em>Year</em>/<em>Jaar</em> and <em>Preview</em> are recognised in any order. Spotify links can also be clickable links in a cell.</p>
+      <div class="row" style="margin-top:0">
+        <label class="btn primary filebtn" for="xls">Choose file<input type="file" id="xls" accept=".xlsx,.xlsm,.xls,.ods,.csv,.tsv,.txt"></label>
+        <select id="xlsMode" aria-label="What to do with the songs" style="width:auto"><option value="replace">Replace the current list</option><option value="add">Add to the current list</option></select>
+        <button class="btn" id="template" type="button">Download example sheet</button>
+      </div>
+      <p class="msg" id="xlsMsg"></p>
     </div>
 
     <h2>Fill in many links at once</h2>
@@ -273,6 +289,95 @@ td input.bad{border-color:var(--bad);background:#fff6f5}
     try { await navigator.clipboard.writeText($('text').value); $('copy').textContent = 'Copied'; }
     catch (e) { $('text').select(); $('copy').textContent = 'Press Ctrl+C'; }
     setTimeout(() => $('copy').textContent = 'Copy list', 2000);
+  });
+
+  // ---------- Excel / CSV import ----------
+  let xlsxLoading = null;
+  const loadXLSX = () => window.XLSX ? Promise.resolve() : (xlsxLoading = xlsxLoading || new Promise((ok, bad) => { const s = document.createElement('script'); s.src = 'xlsx.full.min.js'; s.onload = ok; s.onerror = () => { xlsxLoading = null; bad(new Error('load')); }; document.head.appendChild(s); }));
+  const yearOf = v => {
+    if (v instanceof Date && !isNaN(v)) return String(v.getFullYear());
+    const m = String(v == null ? '' : v).match(/\b(18[89]\d|19\d\d|20[0-4]\d)\b/); return m ? m[1] : '';
+  };
+  const HDR = {
+    link: /spotify|link|url|uri/i,
+    preview: /preview|voorbeeld/i,
+    year: /year|jaar|recorded|opname|datum|date/i,
+    artist: /artist|artiest|uitvoerder|band|musician|muzikant|performer|leader/i,
+    title: /title|titel|song|nummer|naam|name|track/i
+  };
+  function sheetToSongs(ws) {
+    if (!ws || !ws['!ref']) return null;
+    const R = XLSX.utils.decode_range(ws['!ref']), grid = [], links = [];
+    for (let r = R.s.r; r <= R.e.r; r++) {
+      const row = []; let rowLink = '';
+      for (let c = R.s.c; c <= R.e.c; c++) {
+        const cell = ws[XLSX.utils.encode_cell({ r, c })];
+        let v = cell ? (cell.v instanceof Date ? cell.v : (cell.w != null ? cell.w : cell.v)) : '';
+        if (cell && cell.l && cell.l.Target && trackId(cell.l.Target)) { rowLink = cell.l.Target; if (trackId(v)) v = cell.l.Target; }
+        row.push(v == null ? '' : v);
+      }
+      if (row.some(x => String(x).trim()) || rowLink) { grid.push(row); links.push(rowLink); }
+    }
+    if (!grid.length) return null;
+    const W = Math.max(...grid.map(r => r.length));
+    const share = (j, test, from) => { let n = 0, t = 0; for (let i = from; i < grid.length; i++) { const v = grid[i][j]; if (String(v).trim()) { t++; if (test(v)) n++; } } return t ? n / t : 0; };
+    const head = grid[0].map(x => String(x).trim());
+    const headerHits = head.filter(h => h && !trackId(h) && Object.values(HDR).some(re => re.test(h))).length;
+    const hasHeader = headerHits >= 1 && !grid[0].some(v => trackId(v));
+    const from = hasHeader ? 1 : 0, cols = {}, used = new Set();
+    const take = (k, j) => { if (j >= 0 && !used.has(j)) { cols[k] = j; used.add(j); } };
+    const best = test => { let bj = -1, bs = 0; for (let j = 0; j < W; j++) { if (used.has(j)) continue; const sc = share(j, test, from); if (sc > bs) { bs = sc; bj = j; } } return bs >= .5 ? bj : -1; };
+    take('link', best(v => !!trackId(v)));
+    take('preview', best(v => !!previewId(v)));
+    if (hasHeader) for (const re of [/record|opname/i, /year|jaar/i, /date|datum/i]) if (cols.year == null) take('year', head.findIndex((h, j) => !used.has(j) && re.test(h)));
+    if (hasHeader) for (const k of ['artist', 'title']) if (cols[k] == null) take(k, head.findIndex((h, j) => !used.has(j) && HDR[k].test(h)));
+    if (cols.year == null) take('year', best(v => /^\s*(18[89]\d|19\d\d|20[0-4]\d)\s*$/.test(String(v)) || (v instanceof Date)));
+    const rest = []; for (let j = 0; j < W; j++) if (!used.has(j) && share(j, v => String(v).trim().length > 0, from) > 0) rest.push(j);
+    if (cols.artist == null) take('artist', rest.find(j => !used.has(j)) ?? -1);
+    if (cols.title == null) take('title', rest.find(j => !used.has(j)) ?? -1);
+    const get = (row, k) => cols[k] == null ? '' : row[cols[k]];
+    const songs = [];
+    for (let i = from; i < grid.length; i++) {
+      const row = grid[i];
+      const id = trackId(get(row, 'link')) || trackId(links[i]);
+      const s = [id ? 'https://open.spotify.com/track/' + id : String(get(row, 'link')).trim(), String(get(row, 'artist')).trim(), String(get(row, 'title')).trim(), yearOf(get(row, 'year')), previewId(get(row, 'preview')) || ''];
+      if (s.some(Boolean)) songs.push(s);
+    }
+    if (cols.link == null && links.some(Boolean)) cols.link = 'hyperlinks';
+    return { songs, cols, hasHeader };
+  }
+  async function importFile(file) {
+    if (!file) return;
+    const msg = $('xlsMsg'); msg.className = 'msg'; msg.textContent = 'Reading ' + file.name + '…';
+    try {
+      await loadXLSX();
+      const wb = XLSX.read(await file.arrayBuffer(), { type: 'array', cellDates: true });
+      let res = null, sheet = '';
+      for (const name of wb.SheetNames) { res = sheetToSongs(wb.Sheets[name]); if (res && res.songs.length) { sheet = name; break; } }
+      if (!res || !res.songs.length) { msg.className = 'msg bad'; msg.textContent = 'No songs found in ' + file.name + '.'; return; }
+      const added = res.songs.map(norm);
+      state.songs = $('xlsMode').value === 'add' ? state.songs.concat(added) : added;
+      save(); renderRows(); renderPreview();
+      const noLink = added.filter(r => !trackId(r[0])).length, noYear = added.filter(r => !r[3]).length, noPv = added.filter(r => trackId(r[0]) && !r[4]).length;
+      const found = ['link', 'artist', 'title', 'year', 'preview'].filter(k => res.cols[k] != null).map(k => res.cols[k] === 'hyperlinks' ? 'link (from clickable links)' : k);
+      let t = 'Loaded ' + added.length + ' song' + (added.length === 1 ? '' : 's') + (wb.SheetNames.length > 1 ? ' from sheet "' + sheet + '"' : '') + '. Columns found: ' + found.join(', ') + '.';
+      const miss = []; if (noLink) miss.push(noLink + ' without a Spotify link'); if (noYear) miss.push(noYear + ' without a year'); if (noPv) miss.push(noPv + ' without a preview ID');
+      if (miss.length) t += ' Check: ' + miss.join(', ') + '.';
+      msg.className = 'msg ' + (noLink || noYear ? 'bad' : 'ok'); msg.textContent = t;
+    } catch (e) {
+      msg.className = 'msg bad'; msg.textContent = 'Could not read ' + file.name + '. Save it as .xlsx or .csv and try again.';
+    }
+  }
+  $('xls').addEventListener('change', e => { importFile(e.target.files[0]); e.target.value = ''; });
+  const drop = $('drop');
+  ['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
+  ['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
+  drop.addEventListener('drop', e => importFile(e.dataTransfer.files[0]));
+  $('template').addEventListener('click', () => {
+    const rows = [['Spotify link', 'Artist', 'Title', 'Year', 'Preview ID']].concat(state.songs.length ? state.songs.map(norm) : EXAMPLES);
+    const csv = '﻿' + rows.map(r => r.map(x => '"' + String(x).replace(/"/g, '""') + '"').join(';')).join('\r\n');
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' })); a.download = 'jazzster-songs.csv';
+    document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
   });
 
   // ---------- settings ----------
