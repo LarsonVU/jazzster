@@ -27,9 +27,10 @@ The song list is saved in that browser. Use "Copy list" to keep a backup.
 
 ## 3. Play
 
-Scan a card with your normal phone camera and tap the link. Press the big play button.
+Scan the first card with your normal phone camera and tap the link. Then:
 
-- If the button does nothing, tap **No sound?** and press the round button inside the blurred player.
-- Songs may play as a 30-second preview unless you're signed in to Spotify in that phone's browser (open.spotify.com). For guessing a year, 30 seconds is usually enough.
+- **Play** plays a 30-second preview right in the page, with the title hidden.
+- **Scan next card** opens the camera inside the page, so you don't need the camera app again.
+- **Hear the full song in the Spotify app** opens Spotify, where the song plays in full but the title is shown.
 
 Rules: use the normal Hitster rules. The year on each card is the **recording year**.

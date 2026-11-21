@@ -8,154 +8,199 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Inter:wght@400;600&display=swap">
 <style>
-:root{--bg:#121a17;--ink:#f4efe6;--dim:#a9b3ad;--accent:#f2b84b;--ring:#2b3833}
+:root{--bg:#121a17;--ink:#f4efe6;--dim:#a9b3ad;--accent:#f2b84b;--ring:#2f3d38}
 *{box-sizing:border-box}
 html,body{height:100%}
-body{margin:0;background:radial-gradient(120% 80% at 50% 0%,#1d2a25 0%,var(--bg) 60%);color:var(--ink);font:16px/1.5 Inter,system-ui,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 18px 32px;text-align:center;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:radial-gradient(120% 80% at 50% 0%,#1d2a25 0%,var(--bg) 60%);color:var(--ink);font:16px/1.5 Inter,system-ui,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 20px 40px;text-align:center;-webkit-tap-highlight-color:transparent}
+main{width:100%;max-width:380px}
 h1{font:800 34px/1 Fraunces,Georgia,serif;letter-spacing:.5px;margin:0 0 6px}
-.sub{color:var(--dim);margin:0 0 28px;font-size:15px}
-.disc{position:relative;width:min(72vw,280px);aspect-ratio:1;margin:0 auto 22px}
-.disc svg{position:absolute;inset:0;width:100%;height:100%}
-.grooves{animation:spin 6s linear infinite;animation-play-state:paused;transform-origin:50% 50%}
-.playing .grooves{animation-play-state:running}
+.sub{color:var(--dim);margin:0 0 26px;font-size:15px}
+.disc{width:150px;height:150px;margin:0 auto 28px;position:relative}
+.disc svg{width:100%;height:100%;display:block}
+.spin{transform-origin:50% 50%;animation:spin 5s linear infinite;animation-play-state:paused}
+.playing .spin{animation-play-state:running}
 @keyframes spin{to{transform:rotate(360deg)}}
-@media (prefers-reduced-motion:reduce){.grooves{animation:none}}
-#play{position:absolute;inset:27%;border-radius:50%;border:0;background:var(--accent);color:#1a1408;cursor:pointer;display:grid;place-items:center;box-shadow:0 10px 30px rgba(0,0,0,.45);transition:transform .12s}
-#play:active{transform:scale(.95)}
-#play:focus-visible{outline:3px solid var(--ink);outline-offset:4px}
-#play svg{width:42%;height:42%;position:static}
-#play[disabled]{opacity:.55;cursor:wait}
-.status{min-height:24px;color:var(--dim);font-size:15px;margin:0 0 6px}
-.time{font-variant-numeric:tabular-nums;color:var(--ink);font-weight:600}
-.actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:18px}
-.btn{font:600 15px Inter,system-ui,sans-serif;color:var(--ink);background:transparent;border:1.5px solid var(--ring);border-radius:999px;padding:11px 18px;min-height:44px;cursor:pointer}
-.btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-#fallback{display:none;margin-top:20px;max-width:420px;width:100%}
-#fallback.show{display:block}
-#fallback p{color:var(--dim);font-size:14px;margin:0 0 10px}
-/* The Spotify player sits here. Normally invisible; in fallback mode it is shown
-   heavily blurred so the title can't be read but the round play button can still be tapped. */
-#embedWrap{position:fixed;left:0;bottom:0;width:320px;height:152px;opacity:0;pointer-events:none;overflow:hidden;border-radius:12px}
-#fallback.show #embedWrap{position:relative;opacity:1;pointer-events:auto;width:100%;margin:0 auto}
-#fallback.show #embedWrap iframe{filter:blur(9px) saturate(.6)}
-.empty h2{font:600 22px Fraunces,Georgia,serif;margin:0 0 8px}
-.empty p{color:var(--dim);max-width:340px;margin:0 auto}
-footer{position:fixed;bottom:10px;left:0;right:0;font-size:12px;color:#5f6b66}
+@media (prefers-reduced-motion:reduce){.spin{animation:none}}
+.big{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:64px;border-radius:999px;border:0;background:var(--accent);color:#1a1408;font:700 20px Inter,system-ui,sans-serif;text-decoration:none;cursor:pointer;box-shadow:0 10px 28px rgba(0,0,0,.4)}
+.big:active{transform:scale(.98)}
+.big[disabled]{opacity:.6;cursor:wait}
+.big svg{width:22px;height:22px}
+.second{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:56px;margin-top:12px;border-radius:999px;border:1.5px solid var(--ring);background:transparent;color:var(--ink);font:600 17px Inter,system-ui,sans-serif;cursor:pointer}
+.second svg{width:20px;height:20px}
+.big:focus-visible,.second:focus-visible,.link:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+.tip{color:var(--dim);font-size:14px;margin:12px 0 0}
+.link{display:inline-block;background:none;border:0;color:var(--dim);font:14px Inter,system-ui,sans-serif;text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:12px;margin-top:14px;min-height:44px}
+.status{color:var(--ink);font-size:14px;min-height:21px;margin:10px 0 0;font-variant-numeric:tabular-nums}
+.done{color:var(--accent);font-weight:600;font-size:14px;min-height:21px;margin:0 0 10px}
+/* The Spotify player is loaded out of sight and never shown. */
+#embedWrap{position:fixed;left:-9999px;top:0;width:300px;height:152px;opacity:0;pointer-events:none}
+/* scanner */
+#scanner{position:fixed;inset:0;background:#000;display:none;flex-direction:column;align-items:center;justify-content:center;z-index:10}
+#scanner.on{display:flex}
+#scanner video{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
+.frame{position:relative;width:min(70vw,280px);aspect-ratio:1;border-radius:20px;box-shadow:0 0 0 100vmax rgba(0,0,0,.55);border:3px solid var(--accent)}
+.scanmsg{position:relative;margin-top:22px;color:#fff;font-size:16px;padding:0 20px}
+#closeScan{position:absolute;top:max(16px,env(safe-area-inset-top));right:16px;width:48px;height:48px;border-radius:50%;border:0;background:rgba(255,255,255,.15);color:#fff;font-size:22px;cursor:pointer}
+footer{margin-top:30px;font-size:12px;color:#5f6b66}
 </style>
 </head>
 <body>
-<h1>Jazzster</h1>
+<main>
+  <h1>Jazzster</h1>
 
-<div id="game" hidden>
-  <p class="sub">Listen, then put the card in your timeline.</p>
-  <div class="disc" id="disc">
-    <svg viewBox="0 0 200 200" aria-hidden="true">
-      <circle cx="100" cy="100" r="98" fill="#0a0d0c"/>
-      <g class="grooves" fill="none" stroke="#1f2724" stroke-width="1">
-        <circle cx="100" cy="100" r="92"/><circle cx="100" cy="100" r="86"/><circle cx="100" cy="100" r="80"/>
-        <circle cx="100" cy="100" r="74"/><circle cx="100" cy="100" r="68"/><circle cx="100" cy="100" r="62"/>
-        <path d="M40 60 A70 70 0 0 1 70 34" stroke="#3a4743" stroke-width="3" stroke-linecap="round"/>
-      </g>
-      <circle id="prog" cx="100" cy="100" r="96" fill="none" stroke="var(--accent)" stroke-width="3"
-        stroke-dasharray="603" stroke-dashoffset="603" transform="rotate(-90 100 100)" stroke-linecap="round"/>
-    </svg>
-    <button id="play" aria-label="Play" disabled>
-      <svg id="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+  <section id="game" hidden>
+    <p class="sub">Listen, then put the card in your timeline.</p>
+    <div class="disc" id="disc" aria-hidden="true">
+      <svg viewBox="0 0 200 200">
+        <circle cx="100" cy="100" r="98" fill="#0a0d0c"/>
+        <g class="spin" fill="none" stroke="#24302c" stroke-width="1.2">
+          <circle cx="100" cy="100" r="90"/><circle cx="100" cy="100" r="80"/><circle cx="100" cy="100" r="70"/><circle cx="100" cy="100" r="60"/>
+          <path d="M44 62 A68 68 0 0 1 72 36" stroke="#4a5853" stroke-width="3" stroke-linecap="round"/>
+        </g>
+        <circle cx="100" cy="100" r="34" fill="var(--accent)"/><circle cx="100" cy="100" r="4" fill="#0a0d0c"/>
+      </svg>
+    </div>
+    <p class="done" id="done"></p>
+    <button class="big" id="here" type="button" disabled>
+      <svg id="hereIcon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg><span id="hereLabel">Play</span>
     </button>
-  </div>
-  <p class="status" id="status">Loading the song…</p>
-  <p class="status"><span class="time" id="time"></span></p>
-  <div class="actions">
-    <button class="btn" id="restart" type="button">Start over</button>
-    <button class="btn" id="noSound" type="button">No sound?</button>
-  </div>
-  <div id="fallback">
-    <p>Tap the round button inside the blurred player below. Avoid tapping the text area, because that opens Spotify and shows the title.</p>
-    <div id="embedWrap"><div id="embed"></div></div>
-  </div>
-</div>
+    <p class="status" id="status"></p>
+    <p class="tip" style="margin-top:2px">Plays a 30-second preview with the title hidden.</p>
+    <button class="second" id="scan1" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M4 12h16"/></svg>Scan next card
+    </button>
+    <a class="link" id="go" href="#" rel="noopener">Hear the full song in the Spotify app (shows the title)</a>
+  </section>
 
-<div id="empty" class="empty" hidden>
-  <h2>Scan a card to start</h2>
-  <p>Point your phone camera at the QR code on a Jazzster card. The song plays here without showing its title.</p>
-</div>
+  <section id="empty" hidden>
+    <p class="sub">Scan a Jazzster card to start.</p>
+    <button class="big" id="scan2" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M4 12h16"/></svg>Scan a card
+    </button>
+    <p class="tip">You can also use your phone's normal camera.</p>
+  </section>
 
-<footer>Music plays through Spotify.</footer>
+  <footer>Music plays through Spotify.</footer>
+</main>
+
+<div id="embedWrap" aria-hidden="true"><div id="embed"></div></div>
+
+<div id="scanner" role="dialog" aria-label="Scan a card">
+  <video id="video" playsinline muted></video>
+  <div class="frame"></div>
+  <p class="scanmsg" id="scanmsg">Point the camera at the QR code on a card.</p>
+  <button id="closeScan" type="button" aria-label="Close scanner">✕</button>
+</div>
 
 <script>
 {
   const $ = id => document.getElementById(id);
-  const trackFromHash = () => {
-    const h = decodeURIComponent(location.hash.slice(1)).trim();
-    const m = h.match(/([A-Za-z0-9]{22})/);
-    return m ? m[1] : null;
-  };
-  const fmt = ms => { const s = Math.max(0, Math.round(ms / 1000)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+  const idFrom = s => { const m = String(s || '').match(/([A-Za-z0-9]{22})/); return m ? m[1] : null; };
+  let current = null, controller = null, apiRequested = false, started = false;
 
-  let controller = null, playing = false, started = false, lastPos = 0, lastDur = 0;
   const PLAY = '<path d="M8 5v14l11-7z"/>', PAUSE = '<path d="M7 5h4v14H7zM13 5h4v14h-4z"/>';
-
-  function setPlaying(p) {
-    playing = p;
-    $('icon').innerHTML = p ? PAUSE : PLAY;
-    $('play').setAttribute('aria-label', p ? 'Pause' : 'Play');
-    $('disc').classList.toggle('playing', p);
+  function setBtn(playing) {
+    $('hereIcon').innerHTML = playing ? PAUSE : PLAY;
+    $('hereLabel').textContent = playing ? 'Pause' : (started ? 'Play again' : 'Play');
+    $('disc').classList.toggle('playing', playing);
   }
-
-  function showGame(id) {
-    $('game').hidden = false; $('empty').hidden = true;
-    setPlaying(false); started = false;
-    $('status').textContent = 'Loading the song…';
-    $('time').textContent = '';
-    $('prog').style.strokeDashoffset = 603;
-    if (controller) { controller.loadUri('spotify:track:' + id); }
-  }
-
-  const id0 = trackFromHash();
-  if (!id0) { $('empty').hidden = false; }
-  else {
-    showGame(id0);
-    // If Spotify's player hasn't reported ready after a while, offer the blurred player directly.
-    setTimeout(() => { if ($('play').disabled) { $('fallback').classList.add('show'); $('status').textContent = 'Still loading. You can also use the player below.'; } }, 8000);
-  }
-
-  window.onSpotifyIframeApiReady = (IFrameAPI) => {
-    const id = trackFromHash();
+  function show(id, fromScan) {
+    current = id;
+    $('game').hidden = !id; $('empty').hidden = !!id;
     if (!id) return;
-    IFrameAPI.createController($('embed'), { uri: 'spotify:track:' + id, width: '100%', height: 152 }, (c) => {
-      controller = c;
-      c.addListener('ready', () => {
-        $('play').disabled = false;
-        $('status').textContent = 'Tap the button to play.';
-      });
-      c.addListener('playback_update', (e) => {
-        const d = e.data || {};
-        lastPos = d.position || 0; lastDur = d.duration || 0;
-        const isPlaying = !d.isPaused && !d.isBuffering;
-        if (isPlaying) started = true;
-        setPlaying(!d.isPaused);
-        if (lastDur) {
-          $('prog').style.strokeDashoffset = 603 * (1 - Math.min(1, lastPos / lastDur));
-          $('time').textContent = fmt(lastPos) + ' / ' + fmt(lastDur);
-        }
-        if (d.isBuffering) $('status').textContent = 'Loading…';
-        else if (isPlaying) $('status').textContent = lastDur && lastDur <= 31000 ? 'Playing a 30-second preview.' : 'Playing. Who is it, and when?';
-        else if (started) $('status').textContent = 'Paused.';
-      });
-    });
-  };
+    $('go').href = 'https://open.spotify.com/track/' + id;
+    $('done').textContent = fromScan ? 'New card scanned.' : '';
+    $('status').textContent = '';
+    started = false; setBtn(false);
+    if (controller) { controller.pause(); controller.loadUri('spotify:track:' + id); }
+    else loadApi();
+  }
 
-  $('play').addEventListener('click', () => {
-    if (!controller) return;
-    controller.togglePlay();
-    // If nothing starts within a few seconds, the browser probably blocked playback from outside the player.
-    if (!playing) setTimeout(() => { if (!started) { $('fallback').classList.add('show'); $('status').textContent = 'Your browser blocked the button. Use the player below.'; } }, 3500);
-  });
-  $('restart').addEventListener('click', () => { if (controller) { controller.seek(0); controller.resume(); } });
-  $('noSound').addEventListener('click', () => $('fallback').classList.toggle('show'));
-  window.addEventListener('hashchange', () => { const id = trackFromHash(); if (id) { if (!controller) location.reload(); else showGame(id); } });
+  // ----- play here with the title hidden (Spotify gives phones a 30-second preview) -----
+  function loadApi() {
+    if (apiRequested) return; apiRequested = true;
+    $('status').textContent = 'Loading the song…';
+    window.onSpotifyIframeApiReady = (API) => {
+      API.createController($('embed'), { uri: 'spotify:track:' + current, width: 300, height: 152 }, (c) => {
+        controller = c;
+        c.addListener('ready', () => { $('here').disabled = false; $('status').textContent = ''; });
+        c.addListener('playback_update', (e) => {
+          const d = e.data || {}; const on = !d.isPaused && !d.isBuffering;
+          if (on) started = true;
+          setBtn(!d.isPaused);
+          if (on && d.duration) { const left = Math.max(0, Math.round((d.duration - d.position) / 1000)); $('status').textContent = left + ' seconds left'; }
+          else if (d.isBuffering) $('status').textContent = 'Loading…';
+          else if (started && d.isPaused) $('status').textContent = '';
+        });
+      });
+    };
+    const s = document.createElement('script'); s.src = 'https://open.spotify.com/embed/iframe-api/v1'; s.async = true; document.body.appendChild(s);
+    setTimeout(() => { if (!controller) $('status').textContent = 'Spotify is slow to load. You can still use the full-song link below.'; }, 10000);
+  }
+  function checkStarted() { if (!started) $('status').textContent = 'This phone blocked playing here. Use the full-song link below instead.'; }
+  $('here').addEventListener('click', () => { if (!controller) return; controller.togglePlay(); setTimeout(checkStarted, 4000); });
+  $('go').addEventListener('click', () => { if (controller) controller.pause(); });
+  show(idFrom(decodeURIComponent(location.hash)));
+  window.addEventListener('hashchange', () => show(idFrom(decodeURIComponent(location.hash))));
+
+  // ----- scanner -----
+  let stream = null, raf = null, detector = null, jsqrLoading = null;
+  const canvas = document.createElement('canvas'), ctx = canvas.getContext('2d', { willReadFrequently: true });
+  function loadJsQR() {
+    if (window.jsQR) return Promise.resolve();
+    if (!jsqrLoading) jsqrLoading = new Promise((ok, bad) => { const s = document.createElement('script'); s.src = 'jsQR.js'; s.onload = ok; s.onerror = bad; document.head.appendChild(s); });
+    return jsqrLoading;
+  }
+  async function openScanner() {
+    $('scanmsg').textContent = 'Point the camera at the QR code on a card.';
+    $('scanner').classList.add('on');
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+      $('video').srcObject = stream; await $('video').play();
+      if ('BarcodeDetector' in window) { try { detector = new BarcodeDetector({ formats: ['qr_code'] }); } catch (e) { detector = null; } }
+      if (!detector) await loadJsQR();
+      tick();
+    } catch (e) {
+      $('scanmsg').textContent = 'The camera could not start. Allow camera access for this site, or use your phone\'s normal camera app.';
+    }
+  }
+  function closeScanner() {
+    cancelAnimationFrame(raf); raf = null;
+    if (stream) stream.getTracks().forEach(t => t.stop()); stream = null;
+    $('scanner').classList.remove('on');
+  }
+  async function tick() {
+    const v = $('video');
+    if (!stream) return;
+    if (v.readyState >= 2) {
+      let text = null;
+      if (detector) {
+        try { const r = await detector.detect(v); if (r[0]) text = r[0].rawValue; } catch (e) {}
+      } else if (window.jsQR) {
+        const w = 480, h = Math.round(480 * v.videoHeight / v.videoWidth) || 480;
+        canvas.width = w; canvas.height = h; ctx.drawImage(v, 0, 0, w, h);
+        const r = jsQR(ctx.getImageData(0, 0, w, h).data, w, h, { inversionAttempts: 'dontInvert' });
+        if (r) text = r.data;
+      }
+      if (text) {
+        const id = idFrom(text);
+        if (id) {
+          closeScanner();
+          if (navigator.vibrate) navigator.vibrate(60);
+          history.replaceState(null, '', '#' + id);
+          show(id, true);
+          return;
+        }
+        $('scanmsg').textContent = 'That QR code is not a Jazzster card.';
+      }
+    }
+    raf = requestAnimationFrame(tick);
+  }
+  $('scan1').addEventListener('click', openScanner);
+  $('scan2').addEventListener('click', openScanner);
+  $('closeScan').addEventListener('click', closeScanner);
+  document.addEventListener('visibilitychange', () => { if (document.hidden && stream) closeScanner(); });
 }
 </script>
-<script src="https://open.spotify.com/embed/iframe-api/v1" async></script>
 </body>
 </html>
