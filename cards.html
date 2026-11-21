@@ -31,6 +31,7 @@ th{font-size:13px;text-align:left;color:var(--dim);font-weight:600;padding:6px 6
 td{padding:5px 4px;border-bottom:1px solid #eee8de;vertical-align:middle}
 td.n{width:34px;color:var(--dim);font-variant-numeric:tabular-nums;text-align:right;padding-right:8px}
 td.y input{width:84px}
+td.pv input{width:120px;font-size:13px}
 td.act{white-space:nowrap;width:1%}
 td input.bad{border-color:var(--bad);background:#fff6f5}
 .icon{border:0;background:none;cursor:pointer;color:var(--dim);font-size:14px;padding:8px;min-width:36px;min-height:36px;border-radius:6px;text-decoration:none;display:inline-block}
@@ -47,7 +48,8 @@ td input.bad{border-color:var(--bad);background:#fff6f5}
   .songs tr{display:grid;grid-template-columns:1fr 1fr 90px;gap:6px;padding:10px 0;border-bottom:1px solid var(--line)}
   .songs td{border:0;padding:0}
   .songs td.n{display:none}
-  .songs td.link{grid-column:1/-1}
+  .songs td.link,.songs td.pv{grid-column:1/-1}
+  td.pv input{width:100%}
   .songs td.act{grid-column:1/-1}
   .preview .sheet{zoom:.36}
 }
@@ -123,7 +125,7 @@ td input.bad{border-color:var(--bad);background:#fff6f5}
     <h2>2. Songs</h2>
     <div class="panel">
       <table class="songs">
-        <thead><tr><th></th><th>Spotify link</th><th>Artist</th><th>Title</th><th>Year</th><th></th></tr></thead>
+        <thead><tr><th></th><th>Spotify link</th><th>Artist</th><th>Title</th><th>Year</th><th>Preview ID</th><th></th></tr></thead>
         <tbody id="rows"></tbody>
       </table>
       <div class="row">
@@ -131,6 +133,7 @@ td input.bad{border-color:var(--bad);background:#fff6f5}
         <button class="btn" id="clear" type="button">Clear all</button>
       </div>
       <p class="msg" id="status"></p>
+      <p class="hint">The preview ID lets a phone play the 30-second preview with the title hidden. It can't be looked up from this page, so ask Claude to fill it in for your list. Cards without one still work through the full-song link.</p>
     </div>
 
     <h2>Fill in many links at once</h2>
@@ -142,7 +145,7 @@ td input.bad{border-color:var(--bad);background:#fff6f5}
 
     <h2>Save or load the list as text</h2>
     <div class="panel">
-      <p class="hint" style="margin:0 0 8px">One song per line: link, artist, title, year, separated by tabs. You can paste from a spreadsheet, and copy it back out to keep a backup. The list is also remembered in this browser.</p>
+      <p class="hint" style="margin:0 0 8px">One song per line: link, artist, title, year and preview ID, separated by tabs or semicolons. You can paste from a spreadsheet, and copy it back out to keep a backup. The list is also remembered in this browser.</p>
       <textarea id="text"></textarea>
       <div class="row">
         <button class="btn" id="load" type="button">Load from text</button>
@@ -170,30 +173,33 @@ td input.bad{border-color:var(--bad);background:#fff6f5}
 <script>
 {
   const $ = id => document.getElementById(id);
-  const KEY = 'jazzster-cards-v1';
+  const KEY = 'jazzster-cards-v2';
   const EXAMPLES = [
-    ['', 'Original Dixieland Jass Band', 'Livery Stable Blues', '1917'],
-    ['', 'Louis Armstrong and His Hot Five', 'West End Blues', '1928'],
-    ['', 'Coleman Hawkins', 'Body and Soul', '1939'],
-    ['', 'Duke Ellington', 'Take the "A" Train', '1941'],
-    ['', 'Charlie Parker', 'Ko-Ko', '1945'],
-    ['', 'Miles Davis', 'So What', '1959'],
-    ['', 'John Coltrane', 'Acknowledgement (A Love Supreme, Pt. I)', '1964'],
-    ['', 'Herbie Hancock', 'Chameleon', '1973'],
-    ['', 'Wynton Marsalis', 'Black Codes (From the Underground)', '1985'],
-    ['', 'Kamasi Washington', 'Change of the Guard', '2011']
+    ['https://open.spotify.com/track/4xR1tOO9p4cnDNmIEttfaZ', 'Original Dixieland Jass Band', 'Livery Stable Blues', '1917', '85715e21fd28fb6ba9eb6a35806829e1d1cbf01f'],
+    ['https://open.spotify.com/track/4qAaQVyiua5xjkYvUMLSVr', 'Louis Armstrong and His Hot Five', 'West End Blues', '1928', '3663c66b02fbcab6d5d2f7eb4297bfe3aaa5b97c'],
+    ['https://open.spotify.com/track/2xm9ihELo6xwrRKrBbPql9', 'Coleman Hawkins', 'Body and Soul', '1939', '6fda9cff161e2f93400c49e7d0eb8943994f74a3'],
+    ['https://open.spotify.com/track/2BuIAKijtji4xpab2QCTBv', 'Duke Ellington', 'Take the "A" Train', '1941', '40cf7ff51b4cba0003cde128f21fd361494b22dd'],
+    ['https://open.spotify.com/track/0fh5g0221cWO1oYQw6d3aW', 'Charlie Parker', 'Ko-Ko', '1945', '0371b8cbf4a5c5f11b6a0447ebe76f4bc08d9099'],
+    ['https://open.spotify.com/track/4vLYewWIvqHfKtJDk8c8tq', 'Miles Davis', 'So What', '1959', 'd1a1a7b585e7bcf9becc2ab44938f6399fe90659'],
+    ['https://open.spotify.com/track/0CLbmkYmQIWiEwnsbOkLpd', 'John Coltrane', 'Acknowledgement (A Love Supreme, Pt. I)', '1964', 'dba47fbbe7d1203f61ab859759ef0cddfdc0ef79'],
+    ['https://open.spotify.com/track/4Ce66JznW8QbeyTdSzdGwR', 'Herbie Hancock', 'Chameleon', '1973', 'd107c54f598ca24db78c6a31f54e65b07aeeb033'],
+    ['https://open.spotify.com/track/5YgifWgpWSqm451l7Y7c6L', 'Wynton Marsalis', 'Black Codes', '1985', 'f92f616387b5fe6fdcfa7221b27f3f4c6cd76299'],
+    ['https://open.spotify.com/track/4xw8UnKYxsiRFjigtQcVAL', 'Kamasi Washington', 'Change of the Guard', '2011', '7cd32f643962e5c8f8f20a9532bbdf952a5241d9']
   ];
   const DECADE = {1890:'#d8c7a6',1900:'#d8c7a6',1910:'#d8c7a6',1920:'#eeb26b',1930:'#e88a6a',1940:'#e0606e',1950:'#6fb3dc',1960:'#4aa39a',1970:'#a77be6',1980:'#f07cc0',1990:'#9ccf45',2000:'#5ccfee',2010:'#ffd257',2020:'#c3c3ff'};
 
   const defaultBase = () => { const u = new URL('./', location.href); u.hash = ''; u.search = ''; return u.href; };
   let state = { base: defaultBase(), label: 'JAZZSTER', size: '65', flip: 'long', ink: 'color', songs: EXAMPLES.map(r => r.slice()) };
+  const norm = r => { r = (r || []).slice(0, 5); while (r.length < 5) r.push(''); return r; };
   try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && Array.isArray(s.songs)) state = Object.assign(state, s); } catch (e) {}
   if (!state.base) state.base = defaultBase();
+  state.songs = state.songs.map(norm);
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} };
 
   const trackId = s => { const m = String(s || '').match(/track[\/:]([A-Za-z0-9]{22})/) || String(s || '').trim().match(/^([A-Za-z0-9]{22})$/); return m ? m[1] : null; };
+  const previewId = s => { const m = String(s || '').match(/([0-9a-f]{40})/); return m ? m[1] : null; };
   const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-  const playerUrl = id => { let b = state.base.trim(); if (!b.endsWith('/') && !/\.html?$/.test(b)) b += '/'; return b + '#' + id; };
+  const playerUrl = (id, pv) => { let b = state.base.trim(); if (!b.endsWith('/') && !/\.html?$/.test(b)) b += '/'; return b + '#' + id + (pv ? '.' + pv : ''); };
 
   function qrSvg(text) {
     const q = qrcode(0, 'M'); q.addData(text); q.make();
@@ -214,7 +220,8 @@ td input.bad{border-color:var(--bad);background:#fff6f5}
         '<td><input data-k="1" value="' + esc(r[1]) + '" placeholder="Artist" aria-label="Artist"></td>' +
         '<td><input data-k="2" value="' + esc(r[2]) + '" placeholder="Title" aria-label="Title"></td>' +
         '<td class="y"><input data-k="3" value="' + esc(r[3]) + '" inputmode="numeric" maxlength="4" placeholder="Year" aria-label="Year"></td>' +
-        '<td class="act">' + (id ? '<a class="icon" target="_blank" rel="noopener" href="' + esc(playerUrl(id)) + '" title="Test in the player">▶ Test</a>' : '') +
+        '<td class="pv"><input data-k="4" value="' + esc(r[4]) + '" placeholder="Optional" aria-label="Preview ID"' + (r[4] && !previewId(r[4]) ? ' class="bad"' : '') + '></td>' +
+        '<td class="act">' + (id ? '<a class="icon" target="_blank" rel="noopener" href="' + esc(playerUrl(id, previewId(r[4]))) + '" title="Test in the player">▶ Test</a>' : '') +
         '<button class="icon" data-del="' + i + '" type="button" title="Remove" aria-label="Remove song ' + (i + 1) + '">✕</button></td></tr>';
     }).join('');
     updateStatus();
@@ -226,23 +233,26 @@ td input.bad{border-color:var(--bad);background:#fff6f5}
     let t = total + ' song' + (total === 1 ? '' : 's') + '.';
     if (missing) t += ' ' + missing + ' still need' + (missing === 1 ? 's' : '') + ' a Spotify link.';
     if (noYear) t += ' ' + noYear + ' need' + (noYear === 1 ? 's' : '') + ' a four-digit year.';
+    const noPv = state.songs.filter(r => trackId(r[0]) && !previewId(r[4])).length;
+    if (noPv) t += ' ' + noPv + ' without a preview ID: those cards can only play through the Spotify app on most phones.';
     $('status').textContent = t;
     $('status').className = 'msg' + (missing || noYear ? ' bad' : '');
-    $('text').value = state.songs.map(r => r.map(x => String(x).replace(/[\t\n]/g, ' ')).join('\t')).join('\n');
+    $('text').value = state.songs.map(r => norm(r).map(x => String(x).replace(/[\t\n]/g, ' ')).join('\t')).join('\n');
   }
 
   $('rows').addEventListener('input', e => {
     const tr = e.target.closest('tr'); if (!tr || e.target.dataset.k == null) return;
     state.songs[+tr.dataset.i][+e.target.dataset.k] = e.target.value;
     if (e.target.dataset.k === '0') e.target.classList.toggle('bad', !!e.target.value && !trackId(e.target.value));
+    if (e.target.dataset.k === '4') e.target.classList.toggle('bad', !!e.target.value && !previewId(e.target.value));
     save(); updateStatus(); schedulePreview();
   });
-  $('rows').addEventListener('change', e => { if (e.target.dataset.k === '0') renderRows(); });
+  $('rows').addEventListener('change', e => { if (e.target.dataset.k === '0' || e.target.dataset.k === '4') renderRows(); });
   $('rows').addEventListener('click', e => {
     const b = e.target.closest('[data-del]'); if (!b) return;
     state.songs.splice(+b.dataset.del, 1); save(); renderRows(); renderPreview();
   });
-  $('add').addEventListener('click', () => { state.songs.push(['', '', '', '']); save(); renderRows(); const ins = $('rows').querySelectorAll('tr:last-child input'); if (ins[0]) ins[0].focus(); });
+  $('add').addEventListener('click', () => { state.songs.push(['', '', '', '', '']); save(); renderRows(); const ins = $('rows').querySelectorAll('tr:last-child input'); if (ins[0]) ins[0].focus(); });
   let clearArmed = false;
   $('clear').addEventListener('click', () => {
     if (!clearArmed) { clearArmed = true; $('clear').textContent = 'Click again to clear'; setTimeout(() => { clearArmed = false; $('clear').textContent = 'Clear all'; }, 3000); return; }
@@ -250,13 +260,13 @@ td input.bad{border-color:var(--bad);background:#fff6f5}
   });
   $('fill').addEventListener('click', () => {
     const ids = ($('links').value.match(/[A-Za-z0-9:\/._\-?=&]+/g) || []).map(trackId).filter(Boolean);
-    ids.forEach((id, i) => { if (!state.songs[i]) state.songs.push(['', '', '', '']); state.songs[i][0] = 'https://open.spotify.com/track/' + id; });
+    ids.forEach((id, i) => { if (!state.songs[i]) state.songs.push(['', '', '', '', '']); state.songs[i][0] = 'https://open.spotify.com/track/' + id; });
     $('links').value = ''; save(); renderRows(); renderPreview();
     $('status').textContent = ids.length + ' link' + (ids.length === 1 ? '' : 's') + ' filled in. ' + $('status').textContent;
   });
   $('load').addEventListener('click', () => {
     const lines = $('text').value.split(/\r?\n/).filter(l => l.trim());
-    state.songs = lines.map(l => { const p = l.split(/\t|\s*;\s*/); while (p.length < 4) p.push(''); return p.slice(0, 4).map(s => s.trim()); });
+    state.songs = lines.map(l => norm(l.split(/\t|\s*;\s*/).map(s => s.trim())));
     save(); renderRows(); renderPreview();
   });
   $('copy').addEventListener('click', async () => {
@@ -280,10 +290,10 @@ td input.bad{border-color:var(--bad);background:#fff6f5}
     for (let r = 0; r <= ROWS; r++) { const y = r * card; out.push([-G - L, y, L, .2], [W + G, y, L, .2]); }
     return out.map(([x, y, w, h]) => '<div class="mark" style="left:' + x + 'mm;top:' + y + 'mm;width:' + w + 'mm;height:' + h + 'mm"></div>').join('');
   }
-  function frontCard(id, n) {
+  function frontCard(id, pv, n) {
     let g = ''; for (let r = 12; r <= 50; r += 4.5) g += '<circle cx="50" cy="50" r="' + r + '"/>';
     return '<div class="card front"><svg class="grooves" viewBox="0 0 100 100" fill="none" stroke="#1f2a26" stroke-width=".5">' + g + '</svg>' +
-      '<div class="qr">' + qrSvg(playerUrl(id)) + '</div><div class="lbl">' + esc(state.label) + '</div><div class="num">' + n + '</div></div>';
+      '<div class="qr">' + qrSvg(playerUrl(id, pv)) + '</div><div class="lbl">' + esc(state.label) + '</div><div class="num">' + n + '</div></div>';
   }
   function backCard(r, n) {
     const y = String(r[3]).trim(), dec = Math.floor((+y || 2020) / 10) * 10, col = DECADE[dec] || '#dddddd';
@@ -294,14 +304,14 @@ td input.bad{border-color:var(--bad);background:#fff6f5}
       '<div class="artist">' + esc(r[1]) + '</div><div class="year">' + esc(y) + '</div><div class="title">' + esc(r[2]) + '</div><div class="num">' + n + '</div></div>';
   }
   function renderPreview() {
-    const ready = state.songs.map((r, i) => ({ r, id: trackId(r[0]), n: i + 1 })).filter(x => x.id);
+    const ready = state.songs.map((r, i) => ({ r, id: trackId(r[0]), pv: previewId(r[4]), n: i + 1 })).filter(x => x.id);
     const card = +state.size, out = [];
     for (let p = 0; p * PER < ready.length; p++) {
       const chunk = ready.slice(p * PER, p * PER + PER);
       const fronts = [], backs = new Array(PER).fill('<div class="card blank"></div>');
       for (let i = 0; i < PER; i++) {
         const x = chunk[i]; const r = Math.floor(i / COLS), c = i % COLS;
-        fronts.push(x ? frontCard(x.id, x.n) : '<div class="card blank"></div>');
+        fronts.push(x ? frontCard(x.id, x.pv, x.n) : '<div class="card blank"></div>');
         const br = state.flip === 'long' ? r : ROWS - 1 - r, bc = state.flip === 'long' ? COLS - 1 - c : c;
         if (x) backs[br * COLS + bc] = backCard(x.r, x.n);
       }

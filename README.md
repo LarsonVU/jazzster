@@ -29,7 +29,7 @@ The song list is saved in that browser. Use "Copy list" to keep a backup.
 
 Scan the first card with your normal phone camera and tap the link. Then:
 
-- **Play** plays a 30-second preview right in the page, with the title hidden.
+- **Tap the record** to play a 30-second preview right in the page, with the title hidden. This needs the card's preview ID, which Claude can look up for your song list.
 - **Scan next card** opens the camera inside the page, so you don't need the camera app again.
 - **Hear the full song in the Spotify app** opens Spotify, where the song plays in full but the title is shown.
 

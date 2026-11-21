@@ -11,37 +11,36 @@
 :root{--bg:#121a17;--ink:#f4efe6;--dim:#a9b3ad;--accent:#f2b84b;--ring:#2f3d38}
 *{box-sizing:border-box}
 html,body{height:100%}
-body{margin:0;background:radial-gradient(120% 80% at 50% 0%,#1d2a25 0%,var(--bg) 60%);color:var(--ink);font:16px/1.5 Inter,system-ui,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 20px 40px;text-align:center;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:radial-gradient(120% 80% at 50% 0%,#1d2a25 0%,var(--bg) 60%);color:var(--ink);font:16px/1.5 Inter,system-ui,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 20px 36px;text-align:center;-webkit-tap-highlight-color:transparent}
 main{width:100%;max-width:380px}
 h1{font:800 34px/1 Fraunces,Georgia,serif;letter-spacing:.5px;margin:0 0 6px}
-.sub{color:var(--dim);margin:0 0 26px;font-size:15px}
-.disc{width:150px;height:150px;margin:0 auto 28px;position:relative}
-.disc svg{width:100%;height:100%;display:block}
-.spin{transform-origin:50% 50%;animation:spin 5s linear infinite;animation-play-state:paused}
+.sub{color:var(--dim);margin:0 0 22px;font-size:15px}
+.done{color:var(--accent);font-weight:600;font-size:14px;min-height:21px;margin:-12px 0 4px}
+/* the record is the play button */
+#disc{position:relative;display:block;width:min(74vw,280px);aspect-ratio:1;margin:0 auto 6px;padding:0;border:0;border-radius:50%;background:none;cursor:pointer}
+#disc:focus-visible{outline:3px solid var(--ink);outline-offset:6px}
+#disc:active .face{transform:scale(.97)}
+#disc svg{position:absolute;inset:0;width:100%;height:100%}
+.face{transition:transform .12s;transform-origin:50% 50%}
+.spin{transform-origin:50% 50%;animation:spin 4s linear infinite;animation-play-state:paused}
 .playing .spin{animation-play-state:running}
 @keyframes spin{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){.spin{animation:none}}
-.big{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:64px;border-radius:999px;border:0;background:var(--accent);color:#1a1408;font:700 20px Inter,system-ui,sans-serif;text-decoration:none;cursor:pointer;box-shadow:0 10px 28px rgba(0,0,0,.4)}
-.big:active{transform:scale(.98)}
-.big[disabled]{opacity:.6;cursor:wait}
-.big svg{width:22px;height:22px}
-.second{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:56px;margin-top:12px;border-radius:999px;border:1.5px solid var(--ring);background:transparent;color:var(--ink);font:600 17px Inter,system-ui,sans-serif;cursor:pointer}
+.status{font-size:15px;min-height:23px;margin:14px 0 18px;font-variant-numeric:tabular-nums}
+.second{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:56px;border-radius:999px;border:1.5px solid var(--ring);background:transparent;color:var(--ink);font:600 17px Inter,system-ui,sans-serif;cursor:pointer}
+.second.big{background:var(--accent);color:#1a1408;border:0;min-height:62px;font-size:19px}
 .second svg{width:20px;height:20px}
-.big:focus-visible,.second:focus-visible,.link:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+.second:focus-visible,.link:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+.link{display:inline-block;color:var(--dim);font-size:14px;text-decoration:underline;text-underline-offset:3px;padding:12px;margin-top:10px}
 .tip{color:var(--dim);font-size:14px;margin:12px 0 0}
-.link{display:inline-block;background:none;border:0;color:var(--dim);font:14px Inter,system-ui,sans-serif;text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:12px;margin-top:14px;min-height:44px}
-.status{color:var(--ink);font-size:14px;min-height:21px;margin:10px 0 0;font-variant-numeric:tabular-nums}
-.done{color:var(--accent);font-weight:600;font-size:14px;min-height:21px;margin:0 0 10px}
-/* The Spotify player is loaded out of sight and never shown. */
 #embedWrap{position:fixed;left:-9999px;top:0;width:300px;height:152px;opacity:0;pointer-events:none}
-/* scanner */
 #scanner{position:fixed;inset:0;background:#000;display:none;flex-direction:column;align-items:center;justify-content:center;z-index:10}
 #scanner.on{display:flex}
 #scanner video{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
 .frame{position:relative;width:min(70vw,280px);aspect-ratio:1;border-radius:20px;box-shadow:0 0 0 100vmax rgba(0,0,0,.55);border:3px solid var(--accent)}
 .scanmsg{position:relative;margin-top:22px;color:#fff;font-size:16px;padding:0 20px}
 #closeScan{position:absolute;top:max(16px,env(safe-area-inset-top));right:16px;width:48px;height:48px;border-radius:50%;border:0;background:rgba(255,255,255,.15);color:#fff;font-size:22px;cursor:pointer}
-footer{margin-top:30px;font-size:12px;color:#5f6b66}
+footer{margin-top:22px;font-size:12px;color:#5f6b66}
 </style>
 </head>
 <body>
@@ -49,40 +48,43 @@ footer{margin-top:30px;font-size:12px;color:#5f6b66}
   <h1>Jazzster</h1>
 
   <section id="game" hidden>
-    <p class="sub">Listen, then put the card in your timeline.</p>
-    <div class="disc" id="disc" aria-hidden="true">
-      <svg viewBox="0 0 200 200">
-        <circle cx="100" cy="100" r="98" fill="#0a0d0c"/>
-        <g class="spin" fill="none" stroke="#24302c" stroke-width="1.2">
-          <circle cx="100" cy="100" r="90"/><circle cx="100" cy="100" r="80"/><circle cx="100" cy="100" r="70"/><circle cx="100" cy="100" r="60"/>
-          <path d="M44 62 A68 68 0 0 1 72 36" stroke="#4a5853" stroke-width="3" stroke-linecap="round"/>
-        </g>
-        <circle cx="100" cy="100" r="34" fill="var(--accent)"/><circle cx="100" cy="100" r="4" fill="#0a0d0c"/>
-      </svg>
-    </div>
+    <p class="sub">Tap the record to listen.</p>
     <p class="done" id="done"></p>
-    <button class="big" id="here" type="button" disabled>
-      <svg id="hereIcon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg><span id="hereLabel">Play</span>
+    <button id="disc" type="button" aria-label="Play">
+      <svg viewBox="0 0 200 200" aria-hidden="true">
+        <g class="face">
+          <circle cx="100" cy="100" r="92" fill="#0a0d0c"/>
+          <g class="spin" fill="none" stroke="#25312d" stroke-width="1.2">
+            <circle cx="100" cy="100" r="84"/><circle cx="100" cy="100" r="76"/><circle cx="100" cy="100" r="68"/><circle cx="100" cy="100" r="60"/><circle cx="100" cy="100" r="52"/>
+            <path d="M42 66 A66 66 0 0 1 70 40" stroke="#4a5853" stroke-width="3" stroke-linecap="round"/>
+          </g>
+          <circle cx="100" cy="100" r="40" fill="var(--accent)"/>
+          <g id="icon" fill="#1a1408"><path d="M92 84v32l26-16z"/></g>
+        </g>
+        <circle cx="100" cy="100" r="97" fill="none" stroke="var(--ring)" stroke-width="3"/>
+        <circle id="prog" cx="100" cy="100" r="97" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linecap="round"
+          stroke-dasharray="609.5" stroke-dashoffset="609.5" transform="rotate(-90 100 100)"/>
+      </svg>
     </button>
-    <p class="status" id="status"></p>
-    <p class="tip" style="margin-top:2px">Plays a 30-second preview with the title hidden.</p>
+    <p class="status" id="status">30-second preview</p>
     <button class="second" id="scan1" type="button">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M4 12h16"/></svg>Scan next card
     </button>
-    <a class="link" id="go" href="#" rel="noopener">Hear the full song in the Spotify app (shows the title)</a>
+    <a class="link" id="go" href="#" rel="noopener">Hear the full song in Spotify (shows the title)</a>
   </section>
 
   <section id="empty" hidden>
     <p class="sub">Scan a Jazzster card to start.</p>
-    <button class="big" id="scan2" type="button">
+    <button class="second big" id="scan2" type="button">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M4 12h16"/></svg>Scan a card
     </button>
     <p class="tip">You can also use your phone's normal camera.</p>
   </section>
 
-  <footer>Music plays through Spotify.</footer>
+  <footer>Previews and songs from Spotify.</footer>
 </main>
 
+<audio id="audio" preload="auto"></audio>
 <div id="embedWrap" aria-hidden="true"><div id="embed"></div></div>
 
 <div id="scanner" role="dialog" aria-label="Scan a card">
@@ -95,55 +97,80 @@ footer{margin-top:30px;font-size:12px;color:#5f6b66}
 <script>
 {
   const $ = id => document.getElementById(id);
-  const idFrom = s => { const m = String(s || '').match(/([A-Za-z0-9]{22})/); return m ? m[1] : null; };
-  let current = null, controller = null, apiRequested = false, started = false;
+  const audio = $('audio');
+  const PLAY = '<path d="M92 84v32l26-16z"/>', PAUSE = '<path d="M86 84h9v32h-9zM105 84h9v32h-9z"/>';
+  // Card links look like  …/jazzster/#<spotify track id>.<preview id>
+  const parse = s => { const m = String(s || '').match(/([A-Za-z0-9]{22})(?:[._-]([0-9a-f]{40}))?/); return m ? { id: m[1], preview: m[2] || null } : null; };
+  let card = null, controller = null, apiRequested = false, started = false;
 
-  const PLAY = '<path d="M8 5v14l11-7z"/>', PAUSE = '<path d="M7 5h4v14H7zM13 5h4v14h-4z"/>';
-  function setBtn(playing) {
-    $('hereIcon').innerHTML = playing ? PAUSE : PLAY;
-    $('hereLabel').textContent = playing ? 'Pause' : (started ? 'Play again' : 'Play');
-    $('disc').classList.toggle('playing', playing);
+  function setPlaying(p) {
+    $('icon').innerHTML = p ? PAUSE : PLAY;
+    $('disc').setAttribute('aria-label', p ? 'Pause' : 'Play');
+    $('disc').classList.toggle('playing', p);
   }
-  function show(id, fromScan) {
-    current = id;
-    $('game').hidden = !id; $('empty').hidden = !!id;
-    if (!id) return;
-    $('go').href = 'https://open.spotify.com/track/' + id;
+  function setProgress(pos, dur) {
+    $('prog').style.strokeDashoffset = dur ? 609.5 * (1 - Math.min(1, pos / dur)) : 609.5;
+    if (dur) $('status').textContent = Math.max(0, Math.ceil(dur - pos)) + ' seconds left';
+  }
+
+  function show(c, fromScan) {
+    card = c;
+    $('game').hidden = !c; $('empty').hidden = !!c;
+    audio.pause(); setPlaying(false); setProgress(0, 0); started = false;
+    if (!c) return;
+    $('go').href = 'https://open.spotify.com/track/' + c.id;
     $('done').textContent = fromScan ? 'New card scanned.' : '';
-    $('status').textContent = '';
-    started = false; setBtn(false);
-    if (controller) { controller.pause(); controller.loadUri('spotify:track:' + id); }
-    else loadApi();
+    $('status').textContent = '30-second preview';
+    if (c.preview) {
+      audio.src = 'https://p.scdn.co/mp3-preview/' + c.preview;
+      audio.load();
+    } else {
+      audio.removeAttribute('src');
+      if (controller) controller.loadUri('spotify:track:' + c.id); else loadApi();
+    }
   }
 
-  // ----- play here with the title hidden (Spotify gives phones a 30-second preview) -----
+  // ---- normal case: the card carries its preview, play it directly ----
+  audio.addEventListener('playing', () => { started = true; setPlaying(true); });
+  audio.addEventListener('pause', () => setPlaying(false));
+  audio.addEventListener('timeupdate', () => setProgress(audio.currentTime, audio.duration));
+  audio.addEventListener('ended', () => { setPlaying(false); setProgress(0, 0); $('status').textContent = 'Done. Tap to hear it again.'; });
+  audio.addEventListener('error', () => { if (card && card.preview) $('status').textContent = 'This preview is not available. Use the full-song link below.'; });
+
+  // ---- fallback for cards without a preview id: Spotify's own player, kept out of sight ----
   function loadApi() {
     if (apiRequested) return; apiRequested = true;
-    $('status').textContent = 'Loading the song…';
     window.onSpotifyIframeApiReady = (API) => {
-      API.createController($('embed'), { uri: 'spotify:track:' + current, width: 300, height: 152 }, (c) => {
+      API.createController($('embed'), { uri: 'spotify:track:' + card.id, width: 300, height: 152 }, (c) => {
         controller = c;
-        c.addListener('ready', () => { $('here').disabled = false; $('status').textContent = ''; });
         c.addListener('playback_update', (e) => {
-          const d = e.data || {}; const on = !d.isPaused && !d.isBuffering;
-          if (on) started = true;
-          setBtn(!d.isPaused);
-          if (on && d.duration) { const left = Math.max(0, Math.round((d.duration - d.position) / 1000)); $('status').textContent = left + ' seconds left'; }
-          else if (d.isBuffering) $('status').textContent = 'Loading…';
-          else if (started && d.isPaused) $('status').textContent = '';
+          const d = e.data || {};
+          if (!d.isPaused && !d.isBuffering) started = true;
+          setPlaying(!d.isPaused);
+          if (d.duration) setProgress(d.position / 1000, d.duration / 1000);
         });
       });
     };
     const s = document.createElement('script'); s.src = 'https://open.spotify.com/embed/iframe-api/v1'; s.async = true; document.body.appendChild(s);
-    setTimeout(() => { if (!controller) $('status').textContent = 'Spotify is slow to load. You can still use the full-song link below.'; }, 10000);
   }
-  function checkStarted() { if (!started) $('status').textContent = 'This phone blocked playing here. Use the full-song link below instead.'; }
-  $('here').addEventListener('click', () => { if (!controller) return; controller.togglePlay(); setTimeout(checkStarted, 4000); });
-  $('go').addEventListener('click', () => { if (controller) controller.pause(); });
-  show(idFrom(decodeURIComponent(location.hash)));
-  window.addEventListener('hashchange', () => show(idFrom(decodeURIComponent(location.hash))));
 
-  // ----- scanner -----
+  $('disc').addEventListener('click', () => {
+    if (!card) return;
+    if (card.preview) {
+      if (audio.paused) { if (audio.ended) audio.currentTime = 0; audio.play().catch(() => { $('status').textContent = 'Tap the record again.'; }); }
+      else audio.pause();
+      return;
+    }
+    if (!controller) { $('status').textContent = 'Still loading…'; return; }
+    controller.togglePlay();
+    setTimeout(() => { if (!started) $('status').textContent = 'This card has no preview. Use the full-song link below.'; }, 4000);
+  });
+  $('go').addEventListener('click', () => { audio.pause(); if (controller) controller.pause(); });
+
+  show(parse(decodeURIComponent(location.hash)));
+  window.addEventListener('hashchange', () => show(parse(decodeURIComponent(location.hash))));
+
+  // ---- scanner ----
   let stream = null, raf = null, detector = null, jsqrLoading = null;
   const canvas = document.createElement('canvas'), ctx = canvas.getContext('2d', { willReadFrequently: true });
   function loadJsQR() {
@@ -152,6 +179,7 @@ footer{margin-top:30px;font-size:12px;color:#5f6b66}
     return jsqrLoading;
   }
   async function openScanner() {
+    audio.pause(); if (controller) controller.pause();
     $('scanmsg').textContent = 'Point the camera at the QR code on a card.';
     $('scanner').classList.add('on');
     try {
@@ -183,12 +211,12 @@ footer{margin-top:30px;font-size:12px;color:#5f6b66}
         if (r) text = r.data;
       }
       if (text) {
-        const id = idFrom(text);
-        if (id) {
+        const c = parse(text.split('#')[1] || text);
+        if (c) {
           closeScanner();
           if (navigator.vibrate) navigator.vibrate(60);
-          history.replaceState(null, '', '#' + id);
-          show(id, true);
+          history.replaceState(null, '', '#' + c.id + (c.preview ? '.' + c.preview : ''));
+          show(c, true);
           return;
         }
         $('scanmsg').textContent = 'That QR code is not a Jazzster card.';
